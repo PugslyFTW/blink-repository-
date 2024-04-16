@@ -1,0 +1,44 @@
+import RPi.GPIO as GPIO
+
+# Define GPIO pins for LEDs
+red_LED_pin = 17
+yellow_LED_pin = 18
+green_LED_pin = 27
+
+# Initialize GPIO
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(red_LED_pin, GPIO.OUT)
+GPIO.setup(yellow_LED_pin, GPIO.OUT)
+GPIO.setup(green_LED_pin, GPIO.OUT)
+
+def control_LED(led, status=None):
+    """
+    Function to control LEDs.
+
+    Args:
+    led (str): The color of the LED to control ('red', 'yellow', 'green').
+    status (bool): True to turn the LED on, False to turn it off. If None, toggle the LED.
+
+    Returns:
+    None
+    """
+    # Mapping LED colors to GPIO pins
+    led_pins = {
+        'red': red_LED_pin,
+        'yellow': yellow_LED_pin,
+        'green': green_LED_pin
+    }
+
+    # Toggle LED if status is not provided
+    if status is None:
+        current_status = GPIO.input(led_pins[led])
+        status = not current_status
+
+    # Turn on/off LED based on status
+    GPIO.output(led_pins[led], status)
+
+# Example usage
+control_LED('red', True)  # Turn on red LED
+control_LED('yellow', False)  # Turn off yellow LED
+control_LED('green')  # Toggle green LED
