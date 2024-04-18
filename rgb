@@ -1,0 +1,62 @@
+import re
+import RPi.GPIO as GPIO
+
+# Define GPIO pins
+redRGBPin = 11
+greenRGBPin = 13
+blueRGBPin = 15
+
+# Initialize GPIO
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(redRGBPin, GPIO.OUT)
+GPIO.setup(greenRGBPin, GPIO.OUT)
+GPIO.setup(blueRGBPin, GPIO.OUT)
+
+# Setup PWM
+REDRGB = GPIO.PWM(redRGBPin, 100)
+GREENRGB = GPIO.PWM(greenRGBPin, 100)
+BLUERGB = GPIO.PWM(blueRGBPin, 100)
+
+# Start PWM with duty cycle 0
+REDRGB.start(0)
+GREENRGB.start(0)
+BLUERGB.start(0)
+
+def parse_color(color_str):
+    color_str = color_str.strip()
+    if re.match(r'^#?([0-9a-fA-F]{2}){3}$', color_str):
+        # If it's a 6 digit hex string or #6 digit hex string
+        r = int(color_str[0:2], 16)
+        g = int(color_str[2:4], 16)
+        b = int(color_str[4:], 16)
+        return [r, g, b]
+    else:
+        # Otherwise, check if it's a predefined color
+        color_dict = {
+            'RED': [255, 0, 0],
+            'GREEN': [0, 255, 0],
+            'BLUE': [0, 0, 255],
+            # Add more colors as needed
+        }
+        if color_str.upper() in color_dict:
+            return color_dict[color_str.upper()]
+        else:
+            # Default to white
+            return [255, 255, 255]
+
+def rgbWrite(r, g, b):
+    r = max(0, min(255, r))
+    g = max(0, min(255, g))
+    b = max(0, min(255, b))
+    
+    r = (r / 255) * 100
+    g = (g / 255) * 100
+    b = (b / 255) * 100
+    
+    REDRGB.ChangeDutyCycle(r)
+    GREENRGB.ChangeDutyCycle(g)
+    BLUERGB.ChangeDutyCycle(b)
+
+# Example usage:
+# color = parse_color("FF0000")  # This can be hex string, #hex string, or color name
+# rgbWrite(color[0], color[1], color[2])
