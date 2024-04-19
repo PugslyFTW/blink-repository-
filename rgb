@@ -1,27 +1,38 @@
-import re
+#
 import RPi.GPIO as GPIO
+import time
+from time import sleep
+# Debug Settings
+GPIO.setwarnings(False)
+debug_messages = 1 # If debug messages is 1 then message will be printed, else if 0 they will be silenced
+if debug_messages : print("Debug Message are 'ON'")
+else : print("Debug Message are 'OFF'")
+hardware_test_messages = 1 # If debug messages is 1 then message will be printed, else if 0 they will be silenced
+if hardware_test_messages : print("Hardware Test Message are 'ON'")
+else : print("Hardware Test Message are 'OFF'")    
+# Makey Bot Pin Assignments
+GPIO.setmode(GPIO.BOARD) # Note This is specifying the physical pins on the Raspberry Pi Header
 
-# Define GPIO pins
 redRGBPin = 11
 greenRGBPin = 13
 blueRGBPin = 15
+GPIO.setup(redRGBPin,GPIO.OUT)
+GPIO.setup(greenRGBPin,GPIO.OUT)
+GPIO.setup(blueRGBPin,GPIO.OUT)
 
-# Initialize GPIO
-GPIO.setmode(GPIO.BOARD)
-GPIO.setup(redRGBPin, GPIO.OUT)
-GPIO.setup(greenRGBPin, GPIO.OUT)
-GPIO.setup(blueRGBPin, GPIO.OUT)
 
-# Setup PWM
-REDRGB = GPIO.PWM(redRGBPin, 100)
-GREENRGB = GPIO.PWM(greenRGBPin, 100)
-BLUERGB = GPIO.PWM(blueRGBPin, 100)
+#choosing a frequency for pwm
+Freq = 1000
 
-# Start PWM with duty cycle 0
-REDRGB.start(0)
-GREENRGB.start(0)
-BLUERGB.start(0)
+#defining the pins that are going to be used with PWM
+REDRGB = GPIO.PWM(redRGBPin, Freq)  
+GREENRGB = GPIO.PWM(greenRGBPin, Freq)
+BLUERGB = GPIO.PWM(blueRGBPin, Freq)
 
+#lighting up the pins. 100 means giving 100% to the pin
+REDRGB.start(1)
+GREENRGB.start(1)
+BLUERGB.start(1)
 def parse_color(color_str):
     color_str = color_str.strip()
     if re.match(r'^#?([0-9a-fA-F]{2}){3}$', color_str):
