@@ -1,0 +1,31 @@
+import RPi.GPIO as GPIO
+import time
+
+
+servo_pin = 18  
+frequency = 50  
+min_pulse_width = 0.5  
+max_pulse_width = 2.5  
+
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(servo_pin, GPIO.OUT)
+
+
+pwm = GPIO.PWM(servo_pin, frequency)
+pwm.start(0)  # Start PWM with duty cycle 0
+
+try:
+    while True:
+      
+        pwm.ChangeDutyCycle(100 * min_pulse_width / (min_pulse_width + max_pulse_width))
+        time.sleep(1)
+        
+       
+        pwm.ChangeDutyCycle(100 * max_pulse_width / (min_pulse_width + max_pulse_width))
+        time.sleep(1)
+
+except KeyboardInterrupt:
+  
+    pwm.stop()
+    GPIO.cleanup() 
