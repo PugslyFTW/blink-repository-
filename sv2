@@ -1,0 +1,41 @@
+import RPi.GPIO as GPIO
+import time
+
+# Set GPIO mode (BCM mode)
+GPIO.setmode(GPIO.BCM)
+
+# Define the GPIO pin to which the servo signal wire is connected
+servo_pin = 17
+
+# Set PWM parameters
+PWM_FREQ = 50  # Frequency (Hz)
+PWM_RANGE = 100  # Pulse range
+
+# Initialize GPIO pin for PWM
+GPIO.setup(servo_pin, GPIO.OUT)
+pwm = GPIO.PWM(servo_pin, PWM_FREQ)
+pwm.start(0)
+
+# Function to set angle of servo
+def set_angle(angle):
+    duty = angle / 18.0 + 2.5
+    GPIO.output(servo_pin, True)
+    pwm.ChangeDutyCycle(duty)
+    time.sleep(0.3)  # Adjust sleep time according to servo speed
+    GPIO.output(servo_pin, False)
+    pwm.ChangeDutyCycle(0)
+
+# Function to make the servo wave
+def wave():
+    set_angle(90)  # Wave up
+    set_angle(0)   # Return to initial position
+
+# Main loop
+try:
+    while True:
+        wave()
+        time.sleep(1)  # Adjust the delay between waves as needed
+
+except KeyboardInterrupt:
+    pwm.stop()
+    GPIO.cleanup()
