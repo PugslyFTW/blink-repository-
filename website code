@@ -1,0 +1,162 @@
+To combine the two codes, we need to integrate the GPIO setup and cleanup, as well as the LED control function, into the first code block. Here's the combined code:
+
+```python
+import RPi.GPIO as GPIO
+import time
+import re
+
+# Debug Settings
+GPIO.setwarnings(False)
+debug_messages = 1  # If debug messages is 1 then message will be printed, else if 0 they will be silenced
+if debug_messages:
+    print("Debug Message are 'ON'")
+else:
+    print("Debug Message are 'OFF'")
+hardware_test_messages = 1  # If debug messages is 1 then message will be printed, else if 0 they will be silenced
+if hardware_test_messages:
+    print("Hardware Test Message are 'ON'")
+else:
+    print("Hardware Test Message are 'OFF'")
+
+# Makey Bot Pin Assignments
+GPIO.setmode(GPIO.BOARD)  # Note This is specifying the physical pins on the Raspberry Pi Header
+
+redRGBPin = 11
+greenRGBPin = 13
+blueRGBPin = 15
+servo_pin_1 = 18
+servo_pin_2 = 17
+
+GPIO.setup(redRGBPin, GPIO.OUT)
+GPIO.setup(greenRGBPin, GPIO.OUT)
+GPIO.setup(blueRGBPin, GPIO.OUT)
+GPIO.setup(servo_pin_1, GPIO.OUT)
+GPIO.setup(servo_pin_2, GPIO.OUT)
+
+# Choosing a frequency for pwm
+Freq = 1000
+
+# Defining the pins that are going to be used with PWM
+REDRGB = GPIO.PWM(redRGBPin, Freq)
+GREENRGB = GPIO.PWM(greenRGBPin, Freq)
+BLUERGB = GPIO.PWM(blueRGBPin, Freq)
+pwm_servo_1 = GPIO.PWM(servo_pin_1, 50)
+pwm_servo_2 = GPIO.PWM(servo_pin_2, 50)
+
+# Lighting up the pins. 100 means giving 100% to the pin
+REDRGB.start(1)
+GREENRGB.start(1)
+BLUERGB.start(1)
+pwm_servo_1.start(0)  # Start PWM with duty cycle 0
+pwm_servo_2.start(0)  # Start PWM with duty cycle 0
+
+# Function to parse color string
+def parse_color(color_str):
+    color_str = color_str.strip()
+    if re.match(r'^#?([0-9a-fA-F]{2}){3}$', color_str):
+        # If it's a 6 digit hex string or #6 digit hex string
+        r = int(color_str[0:2], 16)
+        g = int(color_str[2:4], 16)
+        b = int(color_str[4:], 16)
+        return [r, g, b]
+    else:
+        # Otherwise, check if it's a predefined color
+        color_dict = {
+            'RED': [255, 0, 0],
+            'GREEN': [0, 255, 0],
+            'BLUE': [0, 0, 255],
+            # Add more colors as needed
+        }
+        if color_str.upper() in color_dict:
+            return color_dict[color_str.upper()]
+        else:
+            # Default to white
+            return [255, 255, 255]
+
+# Function to write RGB values
+def rgbWrite(r, g, b):
+    r = max(0, min(255, r))
+    g = max(0, min(255, g))
+    b = max(0, min(255, b))
+
+    r = (r / 255) * 100
+    g = (g / 255) * 100
+    b = (b / 255) * 100
+
+    REDRGB.ChangeDutyCycle(r)
+    GREENRGB.ChangeDutyCycle(g)
+    BLUERGB.ChangeDutyCycle(b)
+
+# Function to set angle of servo
+def set_angle(pwm, angle):
+    duty = angle / 18.0 + 2.5
+    pwm.ChangeDutyCycle(duty)
+    time.sleep(0.3)  # Adjust sleep time according to servo speed
+    pwm.ChangeDutyCycle(0)
+
+# Function to make the servo wave
+def wave(pwm):
+    set_angle(pwm, 90)  # Wave up
+    set_angle(pwm, 0)   # Return to initial position
+
+# Example usage of RGB function:
+# color = parse_color("FF0000")  # This can be hex string, #hex string, or color name
+# rgbWrite(color[0], color[1], color[2])
+
+# Function to control LEDs
+def robotLED(device, action):
+    print('LED on/off Function')
+    print('The robot device is', device, 'the robot action is', action)
+
+    # GPIO control code to turn on/off the LEDs
+    pin = led_pins.get(device)
+    if pin is not None:
+        if action == 'on':
+            print('Turning on', device)
+            GPIO.output(pin, GPIO.HIGH)  # Turn on LED
+        elif action == 'off':
+            print('Turning off', device)
+            GPIO.output(pin, GPIO.LOW)  # Turn off LED
+        else:
+            print('Warning: Invalid action - should not see this message')
+    else:
+        print('Warning: Invalid device - should not see this message')
+
+try:
+    while True:
+        # RGB LEDs example
+        # rgbWrite(255, 0, 0)  # Set RGB to red
+        # time.sleep(1)
+        # rgbWrite(0, 255, 0)  # Set RGB to green
+        # time.sleep(1)
+        # rgbWrite(0, 0, 255)  # Set RGB to blue
+        # time.sleep(1)
+
+        # Servo Motor 1 example
+        pwm_servo_1.ChangeDutyCycle(100 * 0.5 / (0.5 + 2.5))  # Move to min position
+        time.sleep(1)
+        pwm_servo_1.ChangeDutyCycle(100 * 2.5 / (0.5 + 2.5))  # Move to max position
+        time.sleep(1)
+
+        # Servo Motor 2 example
+        wave(pwm_servo_2)
+        time.sleep(1)  # Adjust the delay between waves as needed
+
+        # Ask for robot name and control LED based on command file
+        user_robot_name = input("Please enter the robot name: ")
+        with open("robotCommand.txt", "r") as file:
+            for line in file:
+                if user_robot_name in line:
+                    parts = line.strip().split(',')
+                    robot_name = parts[0]
+                    robot_feature = parts[1]
+                    robot_action = parts[2]
+                    robot_date = parts[3]
+                    robot_time = parts[4]
+                    print("robot_name:", robot_name)
+                    print("robot_feature:", robot_feature)
+                    print("robot_action:", robot_action)
+                    print("robot_date:", robot_date)
+                    print("robot_time:", robot_time)
+                    print("\nThe User requested to have {} turn on the {} and have it be {}.".format(robot_name, robot_feature, robot_action))
+                    robot
